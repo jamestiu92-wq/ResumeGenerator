@@ -7,7 +7,9 @@ dotenv.config();
 const app = express();
 
 app.use(express.json({ limit: "2mb" }));
-app.use(express.static(__dirname));
+
+// Serve the resume builder locally from the public folder
+app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 
@@ -23,6 +25,17 @@ const PAYPAL_BASE_URL =
 // Price of one PDF download
 const PDF_PRICE = "1.00";
 const PDF_CURRENCY = "USD";
+
+
+// --------------------------------------------------
+// HOME PAGE
+// --------------------------------------------------
+
+app.get("/", (req, res) => {
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
+});
 
 
 // --------------------------------------------------
@@ -42,10 +55,12 @@ async function getPayPalAccessToken() {
         `${PAYPAL_BASE_URL}/v1/oauth2/token`,
         {
             method: "POST",
+
             headers: {
                 "Authorization": `Basic ${auth}`,
                 "Content-Type": "application/x-www-form-urlencoded"
             },
+
             body: "grant_type=client_credentials"
         }
     );
@@ -53,8 +68,14 @@ async function getPayPalAccessToken() {
     const data = await response.json();
 
     if (!response.ok) {
-        console.error("PayPal authentication error:", data);
-        throw new Error("Unable to authenticate with PayPal.");
+        console.error(
+            "PayPal authentication error:",
+            data
+        );
+
+        throw new Error(
+            "Unable to authenticate with PayPal."
+        );
     }
 
     return data.access_token;
@@ -66,10 +87,12 @@ async function getPayPalAccessToken() {
 // --------------------------------------------------
 
 app.get("/api/paypal/config", (req, res) => {
+
     res.json({
         clientId: PAYPAL_CLIENT_ID,
         currency: PDF_CURRENCY
     });
+
 });
 
 
@@ -78,8 +101,11 @@ app.get("/api/paypal/config", (req, res) => {
 // --------------------------------------------------
 
 app.post("/api/paypal/create-order", async (req, res) => {
+
     try {
-        const accessToken = await getPayPalAccessToken();
+
+        const accessToken =
+            await getPayPalAccessToken();
 
         const response = await fetch(
             `${PAYPAL_BASE_URL}/v2/checkout/orders`,
@@ -88,7 +114,8 @@ app.post("/api/paypal/create-order", async (req, res) => {
 
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`
+                    "Authorization":
+                        `Bearer ${accessToken}`
                 },
 
                 body: JSON.stringify({
@@ -97,11 +124,15 @@ app.post("/api/paypal/create-order", async (req, res) => {
                     purchase_units: [
                         {
                             amount: {
-                                currency_code: PDF_CURRENCY,
-                                value: PDF_PRICE
+                                currency_code:
+                                    PDF_CURRENCY,
+
+                                value:
+                                    PDF_PRICE
                             },
 
-                            description: "Professional Resume PDF Download"
+                            description:
+                                "Professional Resume PDF Download"
                         }
                     ]
                 })
@@ -111,10 +142,15 @@ app.post("/api/paypal/create-order", async (req, res) => {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error("Create order error:", data);
+
+            console.error(
+                "Create order error:",
+                data
+            );
 
             return res.status(500).json({
-                error: "Unable to create PayPal order."
+                error:
+                    "Unable to create PayPal order."
             });
         }
 
@@ -127,9 +163,11 @@ app.post("/api/paypal/create-order", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
-            error: "Payment server error."
+            error:
+                "Payment server error."
         });
     }
+
 });
 
 
@@ -137,117 +175,166 @@ app.post("/api/paypal/create-order", async (req, res) => {
 // Capture PayPal Order
 // --------------------------------------------------
 
-app.post("/api/paypal/capture-order", async (req, res) => {
-    try {
+app.post(
+    "/api/paypal/capture-order",
+    async (req, res) => {
 
-        const { orderID } = req.body;
+        try {
 
-        if (!orderID) {
-            return res.status(400).json({
-                success: false,
-                error: "Missing PayPal order ID."
-            });
-        }
+            const { orderID } = req.body;
 
-        const accessToken = await getPayPalAccessToken();
+            if (!orderID) {
 
-        const response = await fetch(
-            `${PAYPAL_BASE_URL}/v2/checkout/orders/${orderID}/capture`,
-            {
-                method: "POST",
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Missing PayPal order ID."
+                });
 
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`
-                }
             }
-        );
 
-        const data = await response.json();
+            const accessToken =
+                await getPayPalAccessToken();
 
-        if (!response.ok) {
-            console.error("Capture order error:", data);
+            const response = await fetch(
+                `${PAYPAL_BASE_URL}/v2/checkout/orders/${orderID}/capture`,
+                {
+                    method: "POST",
 
-            return res.status(500).json({
-                success: false,
-                error: "Unable to capture payment."
-            });
-        }
+                    headers: {
+                        "Content-Type":
+                            "application/json",
 
-
-        // Make sure PayPal says the order is completed
-        if (data.status !== "COMPLETED") {
-
-            return res.status(400).json({
-                success: false,
-                error: "Payment was not completed."
-            });
-        }
-
-
-        // Verify the payment amount
-        const capture =
-            data.purchase_units?.[0]?.payments?.captures?.[0];
-
-        if (!capture) {
-
-            return res.status(400).json({
-                success: false,
-                error: "Payment information could not be verified."
-            });
-        }
-
-
-        const paidAmount = capture.amount?.value;
-        const paidCurrency = capture.amount?.currency_code;
-
-        if (
-            paidAmount !== PDF_PRICE ||
-            paidCurrency !== PDF_CURRENCY
-        ) {
-
-            console.error(
-                "Payment amount mismatch:",
-                paidAmount,
-                paidCurrency
+                        "Authorization":
+                            `Bearer ${accessToken}`
+                    }
+                }
             );
 
-            return res.status(400).json({
-                success: false,
-                error: "Payment amount could not be verified."
+            const data = await response.json();
+
+            if (!response.ok) {
+
+                console.error(
+                    "Capture order error:",
+                    data
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    error:
+                        "Unable to capture payment."
+                });
+
+            }
+
+
+            // Make sure PayPal says the order is completed
+
+            if (data.status !== "COMPLETED") {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Payment was not completed."
+                });
+
+            }
+
+
+            // Get the payment capture
+
+            const capture =
+                data.purchase_units?.[0]
+                    ?.payments
+                    ?.captures?.[0];
+
+            if (!capture) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Payment information could not be verified."
+                });
+
+            }
+
+
+            // Verify payment amount
+
+            const paidAmount =
+                capture.amount?.value;
+
+            const paidCurrency =
+                capture.amount?.currency_code;
+
+            if (
+                paidAmount !== PDF_PRICE ||
+                paidCurrency !== PDF_CURRENCY
+            ) {
+
+                console.error(
+                    "Payment amount mismatch:",
+                    paidAmount,
+                    paidCurrency
+                );
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Payment amount could not be verified."
+                });
+
+            }
+
+
+            // Payment successful
+
+            res.json({
+                success: true,
+                orderID: data.id,
+                captureID: capture.id
             });
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).json({
+                success: false,
+                error:
+                    "Payment verification failed."
+            });
+
         }
 
-
-        res.json({
-            success: true,
-            orderID: data.id,
-            captureID: capture.id
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            error: "Payment verification failed."
-        });
     }
-});
+);
 
 
 // --------------------------------------------------
-// Start Server
+// Local Server
 // --------------------------------------------------
 
-app.listen(PORT, () => {
+if (!process.env.VERCEL) {
 
-    console.log(
-        `Resume Builder running at http://localhost:${PORT}`
-    );
+    app.listen(PORT, () => {
 
-    console.log(
-        `PayPal environment: ${PAYPAL_ENV}`
-    );
-});
+        console.log(
+            `Resume Builder running at http://localhost:${PORT}`
+        );
+
+        console.log(
+            `PayPal environment: ${PAYPAL_ENV}`
+        );
+
+    });
+
+}
+
+
+// --------------------------------------------------
+// Export Express App for Vercel
+// --------------------------------------------------
+
+module.exports = app;
