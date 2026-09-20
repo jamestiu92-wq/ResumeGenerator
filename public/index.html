@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Resume Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+    <!-- html2pdf.js CDN for robust PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                        serif: ['Merriweather', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Print styles for A4 PDF Generation */
+        @media print {
+            body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            no-print, header, aside, .no-print { display: none !important; }
+            #preview-container { box-shadow: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: none !important; }
+            .resume-sheet { width: 210mm !min-height: 297mm; padding: 15mm; margin: 0 auto; background: white !important; }
+        }
+        .resume-sheet { width: 100%; min-height: 1050px; background: white; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-full bg-slate-900 text-slate-100 font-sans flex flex-col overflow-hidden">
+
+    <header class="bg-slate-950 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 no-print shrink-0 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                <i class="fa-solid fa-file-lines text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">Professional Resume Builder</h1>
+                <p class="text-xs text-slate-400">Create a standout, ATS-friendly resume in minutes.</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="loadSampleData()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Load Sample Data
+            </button>
+            <button onclick="saveResumeData()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save
+            </button>
+            <button onclick="clearForm()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-red-300 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-trash-can"></i> Clear
+            </button>
+            <button onclick="downloadPDF()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-download"></i> Download PDF
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- LEFT PANEL: FORM & CUSTOMIZATION -->
+        <section class="w-full lg:w-1/2 xl:w-[55%] flex flex-col bg-slate-900 border-r border-slate-800 overflow-hidden">
+            
+            <!-- Customization Bar: Templates, Colors, & Sections Control -->
+            <div class="bg-slate-950 p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4 no-print shrink-0">
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Template:</label>
+                    <select id="templateSelect" onchange="updatePreview()" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="professional">Professional</option>
+                        <option value="modern">Modern</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="creative">Creative</option>
+                        <option value="developer">IT / Developer</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Accent Color:</label>
+                    <div class="flex items-center gap-1.5" id="colorPalette">
+                        <button onclick="setAccentColor('black', '#0f172a')" class="w-5 h-5 rounded-full bg-slate-900 border-2 border-white ring-2 ring-slate-700" title="Black"></button>
+                        <button onclick="setAccentColor('blue', '#2563eb')" class="w-5 h-5 rounded-full bg-blue-600 border-2 border-white ring-2 ring-slate-700" title="Dark Blue"></button>
+                        <button onclick="setAccentColor('navy', '#1e3a8a')" class="w-5 h-5 rounded-full bg-navy-900 bg-[oklch(0.3_0.1_250)] border-2 border-white ring-2 ring-slate-700" title="Navy"></button>
+                        <button onclick="setAccentColor('gray', '#4b5563')" class="w-5 h-5 rounded-full bg-gray-600 border-2 border-white ring-2 ring-slate-700" title="Gray"></button>
+                        <button onclick="setAccentColor('green', '#059669')" class="w-5 h-5 rounded-full bg-emerald-600 border-2 border-white ring-2 ring-slate-700" title="Dark Green"></button>
+                        <button onclick="setAccentColor('burgundy', '#831843')" class="w-5 h-5 rounded-full bg-rose-900 border-2 border-white ring-2 ring-slate-700" title="Burgundy"></button>
+                    </div>
+                </div>
+
+                <button onclick="toggleSectionModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i> Sections & Order
+                </button>
+            </div>
+
+            <!-- Form Navigation Tabs -->
+            <div class="flex overflow-x-auto bg-slate-950/70 border-b border-slate-800 px-3 py-2 no-print shrink-0 gap-1.5" id="formTabs">
+                <button onclick="switchTab('personal')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white shrink-0 transition" data-tab="personal">Personal</button>
+                <button onclick="switchTab('summary')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="summary">Summary</button>
+                <button onclick="switchTab('experience')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="experience">Experience</button>
+                <button onclick="switchTab('education')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="education">Education</button>
+                <button onclick="switchTab('skills')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="skills">Skills</button>
+                <button onclick="switchTab('projects')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="projects">Projects</button>
+                <button onclick="switchTab('certifications')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="certifications">Certs</button>
+                <button onclick="switchTab('awards')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="awards">Awards</button>
+                <button onclick="switchTab('languages')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="languages">Languages</button>
+                <button onclick="switchTab('organizations')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="organizations">Orgs</button>
+                <button onclick="switchTab('references')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition" data-tab="references">References</button>
+            </div>
+
+            <!-- Form Body Sections Container -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6" id="formSectionsContainer">
+                
+                <!-- 1. PERSONAL INFORMATION TAB -->
+                <div id="section-personal" class="form-section space-y-4">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Personal Information</h2>
+                            <p class="text-xs text-slate-400">Get started with your contact details and photo.</p>
+                        </div>
+                        <span class="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-1 rounded-md">Required</span>
+                    </div>
+
+                    <!-- Profile Photo Upload -->
+                    <div class="flex items-center gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <div id="photoPreviewContainer" class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                            <i class="fa-solid fa-user text-2xl text-slate-500" id="photoPlaceholderIcon"></i>
+                            <img id="photoImg" src="" alt="Profile Preview" class="w-full h-full object-cover hidden">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Profile Photo</label>
+                            <div class="flex items-center gap-2">
+                                <label class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 cursor-pointer transition">
+                                    Upload Photo <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                                </label>
+                                <button type="button" onclick="removePhoto()" id="removePhotoBtn" class="hidden px-3 py-1.5 bg-red-950/50 hover:bg-red-900/50 text-red-300 text-xs font-medium rounded-lg border border-red-800/50 transition">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Full Name <span class="text-red-400">*</span></label>
+                            <input type="text" id="fullName" placeholder="e.g. Juan Dela Cruz" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Professional Title / Position</label>
+                            <input type="text" id="professionalTitle" placeholder="e.g. Senior Software Engineer" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Email Address <span class="text-red-400">*</span></label>
+                            <input type="email" id="email" placeholder="e.g. juan@example.com" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Phone Number</label>
+                            <input type="text" id="phone" placeholder="e.g. +63 912 345 6789" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Address / Street</label>
+                            <input type="text" id="address" placeholder="e.g. 123 Rizal Street" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">City</label>
+                            <input type="text" id="city" placeholder="e.g. Manila" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Province / State</label>
+                            <input type="text" id="province" placeholder="e.g. Metro Manila" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Country</label>
+                            <input type="text" id="country" placeholder="e.g. Philippines" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">LinkedIn URL</label>
+                            <input type="text" id="linkedin" placeholder="e.g. linkedin.com/in/juandelacruz" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">GitHub URL</label>
+                            <input type="text" id="github" placeholder="e.g. github.com/juandelacruz" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Portfolio / Website URL</label>
+                            <input type="text" id="website" placeholder="e.g. https://juandelacruz.dev" oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. PROFESSIONAL SUMMARY TAB -->
+                <div id="section-summary" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Professional Summary</h2>
+                            <p class="text-xs text-slate-400">Write a short overview of your professional career and top achievements.</p>
+                        </div>
+                        <button type="button" onclick="aiPolishSummary()" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles text-amber-400"></i> ✨ AI Polish
+                        </button>
+                    </div>
+
+                    <div>
+                        <textarea id="professionalSummary" rows="6" placeholder="Write or paste your summary here..." oninput="updatePreview()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- 3. WORK EXPERIENCE TAB -->
+                <div id="section-experience" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Work Experience</h2>
+                            <p class="text-xs text-slate-400">Add your past employment history and key responsibilities.</p>
+                        </div>
+                        <button type="button" onclick="addExperienceEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Experience
+                        </button>
+                    </div>
+
+                    <div id="experienceList" class="space-y-4">
+                        <!-- Dynamic Experience Cards injected here -->
+                    </div>
+                </div>
+
+                <!-- 4. EDUCATION TAB -->
+                <div id="section-education" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Education</h2>
+                            <p class="text-xs text-slate-400">Add your academic background and degrees.</p>
+                        </div>
+                        <button type="button" onclick="addEducationEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Education
+                        </button>
+                    </div>
+
+                    <div id="educationList" class="space-y-4">
+                        <!-- Dynamic Education Cards injected here -->
+                    </div>
+                </div>
+
+                <!-- 5. SKILLS TAB -->
+                <div id="section-skills" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Skills</h2>
+                            <p class="text-xs text-slate-400">List your technical and soft skills with proficiency levels.</p>
+                        </div>
+                        <button type="button" onclick="addSkillEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Skill
+                        </button>
+                    </div>
+
+                    <div id="skillsList" class="space-y-3">
+                        <!-- Dynamic Skills injected here -->
+                    </div>
+                </div>
+
+                <!-- 6. PROJECTS TAB -->
+                <div id="section-projects" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Projects</h2>
+                            <p class="text-xs text-slate-400">Showcase personal or professional projects you've built.</p>
+                        </div>
+                        <button type="button" onclick="addProjectEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Project
+                        </button>
+                    </div>
+
+                    <div id="projectList" class="space-y-4">
+                        <!-- Dynamic Projects injected here -->
+                    </div>
+                </div>
+
+                <!-- 7. CERTIFICATIONS TAB -->
+                <div id="section-certifications" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Certifications</h2>
+                            <p class="text-xs text-slate-400">Add industry certifications and credentials.</p>
+                        </div>
+                        <button type="button" onclick="addCertificationEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Certification
+                        </button>
+                    </div>
+
+                    <div id="certificationList" class="space-y-4">
+                        <!-- Dynamic Certifications injected here -->
+                    </div>
+                </div>
+
+                <!-- 8. AWARDS TAB -->
+                <div id="section-awards" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Awards & Achievements</h2>
+                            <p class="text-xs text-slate-400">Highlight recognitions, honors, or awards received.</p>
+                        </div>
+                        <button type="button" onclick="addAwardEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Award
+                        </button>
+                    </div>
+
+                    <div id="awardList" class="space-y-4">
+                        <!-- Dynamic Awards injected here -->
+                    </div>
+                </div>
+
+                <!-- 9. LANGUAGES TAB -->
+                <div id="section-languages" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Languages</h2>
+                            <p class="text-xs text-slate-400">Specify languages spoken and proficiency levels.</p>
+                        </div>
+                        <button type="button" onclick="addLanguageEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Language
+                        </button>
+                    </div>
+
+                    <div id="languageList" class="space-y-3">
+                        <!-- Dynamic Languages injected here -->
+                    </div>
+                </div>
+
+                <!-- 10. ORGANIZATIONS TAB -->
+                <div id="section-organizations" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">Organizations & Activities</h2>
+                            <p class="text-xs text-slate-400">List memberships, clubs, or extracurricular leadership roles.</p>
+                        </div>
+                        <button type="button" onclick="addOrganizationEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Add Organization
+                        </button>
+                    </div>
+
+                    <div id="organizationList" class="space-y-4">
+                        <!-- Dynamic Organizations injected here -->
+                    </div>
+                </div>
+
+                <!-- 11. REFERENCES TAB -->
+                <div id="section-references" class="form-section space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-white">References</h2>
+                            <p class="text-xs text-slate-400">Provide professional referees or choose the standard alternative.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-slate-300 font-medium">Available Upon Request</label>
+                            <input type="checkbox" id="referencesAvailableToggle" onchange="toggleReferencesMode()" class="w-4 h-4 text-indigo-600 rounded bg-slate-950 border-slate-700 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <div id="referencesContentContainer" class="space-y-4">
+                        <div class="flex justify-end">
+                            <button type="button" onclick="addReferenceEntry()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-plus"></i> Add Reference
+                            </button>
+                        </div>
+                        <div id="referenceList" class="space-y-4">
+                            <!-- Dynamic References injected here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Form Navigation Footer -->
+            <div class="bg-slate-950 p-4 border-t border-slate-800 flex items-center justify-between no-print shrink-0">
+                <button onclick="navigateTab(-1)" id="prevTabBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Previous
+                </button>
+                <button onclick="navigateTab(1)" id="nextTabBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md transition flex items-center gap-2">
+                    Next Section <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- RIGHT PANEL: LIVE RESUME PREVIEW -->
+        <section class="w-full lg:w-1/2 xl:w-[45%] bg-slate-950 flex flex-col h-full overflow-hidden">
+            
+            <div class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between no-print shrink-0">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-eye text-indigo-400"></i> Live Preview
+                </span>
+                <div class="flex items-center gap-2">
+                    <span id="validationWarning" class="text-xs text-amber-400 font-medium hidden flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Fill Required Fields
+                    </span>
+                    <button onclick="zoomPreview(0.1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-xs flex items-center justify-center border border-slate-700" title="Zoom In">+</button>
+                    <button onclick="zoomPreview(-0.1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-xs flex items-center justify-center border border-slate-700" title="Zoom Out">-</button>
+                </div>
+            </div>
+
+            <!-- Preview Canvas Scroll Area -->
+            <div id="previewScrollArea" class="flex-1 overflow-auto p-4 sm:p-8 flex items-start justify-center bg-slate-950">
+                <div id="resumePreview" class="resume-sheet shadow-2xl rounded-none sm:rounded-md transition-all duration-300 text-slate-900 bg-white p-8 sm:p-12 text-sm leading-normal">
+                    <!-- Rendered resume HTML generated here -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- SECTIONS MANAGEMENT & ORDER MODAL -->
+    <div id="sectionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i> Manage Sections & Order
+                </h3>
+                <button onclick="toggleSectionModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-400">Toggle sections on/off or rearrange their display order on your resume.</p>
+
+            <div id="sectionOrderList" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="toggleSectionModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3 text-xs">
+        <div id="toastIcon" class="text-emerald-400 text-base"><i class="fa-solid fa-circle-check"></i></div>
+        <div id="toastMessage">Action completed successfully.</div>
+    </div>
+
+    <script>
+        // Global State & Data Models
+        let resumeData = {
+            personal: {
+                fullName: '',
+                professionalTitle: '',
+                email: '',
+                phone: '',
+                address: '',
+                city: '',
+                province: '',
+                country: '',
+                linkedin: '',
+                github: '',
+                website: '',
+                photo: ''
+            },
+            summary: '',
+            experience: [],
+            education: [],
+            skills: [],
+            projects: [],
+            certifications: [],
+            awards: [],
+            languages: [],
+            organizations: [],
+            references: {
+                availableUponRequest: false,
+                list: []
+            },
+            settings: {
+                template: 'professional',
+                accentColor: '#2563eb',
+                zoom: 1,
+                sectionsOrder: [
+                    { id: 'summary', name: 'Professional Summary', enabled: true },
+                    { id: 'experience', name: 'Work Experience', enabled: true },
+                    { id: 'education', name: 'Education', enabled: true },
+                    { id: 'skills', name: 'Skills', enabled: true },
+                    { id: 'projects', name: 'Projects', enabled: true },
+                    { id: 'certifications', name: 'Certifications', enabled: true },
+                    { id: 'awards', name: 'Awards & Achievements', enabled: true },
+                    { id: 'languages', name: 'Languages', enabled: true },
+                    { id: 'organizations', name: 'Organizations / Activities', enabled: true },
+                    { id: 'references', name: 'References', enabled: true }
+                ]
+            }
+        };
+
+        const tabs = ['personal', 'summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'awards', 'languages', 'organizations', 'references'];
+        let currentTabIndex = 0;
+
+        // On Load Initialization
+        window.onload = function() {
+            loadSavedResume();
+            renderAllFormSections();
+            updatePreview();
+            renderSectionOrderModal();
+        };
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            currentTabIndex = tabs.indexOf(tabId);
+            document.querySelectorAll('.form-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if(btn.dataset.tab === tabId) {
+                    btn.className = "tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white shrink-0 transition";
+                } else {
+                    btn.className = "tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0 transition";
+                }
+            });
+
+            // Update footer buttons
+            document.getElementById('prevTabBtn').style.visibility = currentTabIndex === 0 ? 'hidden' : 'visible';
+            document.getElementById('nextTabBtn').innerHTML = currentTabIndex === tabs.length - 1 ? 'Review & Preview <i class="fa-solid fa-eye"></i>' : 'Next Section <i class="fa-solid fa-arrow-right"></i>';
+        }
+
+        function navigateTab(direction) {
+            currentTabIndex += direction;
+            if (currentTabIndex < 0) currentTabIndex = 0;
+            if (currentTabIndex >= tabs.length) currentTabIndex = tabs.length - 1;
+            switchTab(tabs[currentTabIndex]);
+        }
+
+        // Photo Upload Handlers
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    resumeData.personal.photo = e.target.result;
+                    document.getElementById('photoImg').src = e.target.result;
+                    document.getElementById('photoImg').classList.remove('hidden');
+                    document.getElementById('photoPlaceholderIcon').classList.add('hidden');
+                    document.getElementById('removePhotoBtn').classList.remove('hidden');
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removePhoto() {
+            resumeData.personal.photo = '';
+            document.getElementById('photoImg').src = '';
+            document.getElementById('photoImg').classList.add('hidden');
+            document.getElementById('photoPlaceholderIcon').classList.remove('hidden');
+            document.getElementById('removePhotoBtn').classList.add('hidden');
+            document.getElementById('photoInput').value = '';
+            updatePreview();
+        }
+
+        // Dynamic Entry Renderers & Handlers
+        function renderAllFormSections() {
+            renderExperienceForm();
+            renderEducationForm();
+            renderSkillsForm();
+            renderProjectsForm();
+            renderCertificationsForm();
+            renderAwardsForm();
+            renderLanguagesForm();
+            renderOrganizationsForm();
+            renderReferencesForm();
+        }
+
+        // Experience
+        function addExperienceEntry() {
+            resumeData.experience.push({
+                title: '', company: '', type: 'Full-time', location: '', startDate: '', endDate: '', current: false, description: '', responsibilities: '', achievements: ''
+            });
+            renderExperienceForm();
+            updatePreview();
+        }
+        function removeExperienceEntry(index) {
+            resumeData.experience.splice(index, 1);
+            renderExperienceForm();
+            updatePreview();
+        }
+        function updateExperienceField(index, field, value) {
+            resumeData.experience[index][field] = value;
+            updatePreview();
+        }
+        function renderExperienceForm() {
+            const container = document.getElementById('experienceList');
+            if (resumeData.experience.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No work experience added yet. Click "+ Add Experience" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.experience.map((exp, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative group">
+                    <button type="button" onclick="removeExperienceEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Job Title</label>
+                            <input type="text" value="${exp.title}" oninput="updateExperienceField(${i}, 'title', this.value)" placeholder="e.g. Software Engineer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Company Name</label>
+                            <input type="text" value="${exp.company}" oninput="updateExperienceField(${i}, 'company', this.value)" placeholder="e.g. Acme Corp" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Employment Type</label>
+                            <select onchange="updateExperienceField(${i}, 'type', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                                <option ${exp.type==='Full-time'?'selected':''}>Full-time</option>
+                                <option ${exp.type==='Part-time'?'selected':''}>Part-time</option>
+                                <option ${exp.type==='Contract'?'selected':''}>Contract</option>
+                                <option ${exp.type==='Freelance'?'selected':''}>Freelance</option>
+                                <option ${exp.type==='Internship'?'selected':''}>Internship</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Location</label>
+                            <input type="text" value="${exp.location}" oninput="updateExperienceField(${i}, 'location', this.value)" placeholder="e.g. Manila, Philippines" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Start Date</label>
+                            <input type="text" value="${exp.startDate}" oninput="updateExperienceField(${i}, 'startDate', this.value)" placeholder="e.g. Jan 2022" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">End Date</label>
+                            <input type="text" value="${exp.endDate}" ${exp.current?'disabled':''} oninput="updateExperienceField(${i}, 'endDate', this.value)" placeholder="e.g. Present" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 disabled:opacity-50">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                        <input type="checkbox" ${exp.current?'checked':''} onchange="resumeData.experience[${i}].current = this.checked; renderExperienceForm(); updatePreview();" id="cur_${i}" class="rounded bg-slate-900 border-slate-800 text-indigo-600">
+                        <label for="cur_${i}" class="text-xs text-slate-300">I currently work here</label>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-[11px] font-medium text-slate-400">Description / Responsibilities</label>
+                            <button type="button" onclick="aiPolishExperience(${i})" class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1"><i class="fa-solid fa-sparkles"></i> AI Polish Description</button>
+                        </div>
+                        <textarea rows="3" oninput="updateExperienceField(${i}, 'description', this.value)" placeholder="Describe your main duties and achievements..." class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200">${exp.description}</textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Education
+        function addEducationEntry() {
+            resumeData.education.push({ school: '', degree: '', major: '', startDate: '', endDate: '', location: '', description: '' });
+            renderEducationForm();
+            updatePreview();
+        }
+        function removeEducationEntry(index) {
+            resumeData.education.splice(index, 1);
+            renderEducationForm();
+            updatePreview();
+        }
+        function updateEducationField(index, field, value) {
+            resumeData.education[index][field] = value;
+            updatePreview();
+        }
+        function renderEducationForm() {
+            const container = document.getElementById('educationList');
+            if (resumeData.education.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No education added yet. Click "+ Add Education" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.education.map((edu, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative group">
+                    <button type="button" onclick="removeEducationEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">School / University</label>
+                            <input type="text" value="${edu.school}" oninput="updateEducationField(${i}, 'school', this.value)" placeholder="e.g. University of the Philippines" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Degree / Course</label>
+                            <input type="text" value="${edu.degree}" oninput="updateEducationField(${i}, 'degree', this.value)" placeholder="e.g. Bachelor of Science" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Major / Specialization</label>
+                            <input type="text" value="${edu.major}" oninput="updateEducationField(${i}, 'major', this.value)" placeholder="e.g. Computer Science" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Location</label>
+                            <input type="text" value="${edu.location}" oninput="updateEducationField(${i}, 'location', this.value)" placeholder="e.g. Quezon City" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Start Date</label>
+                            <input type="text" value="${edu.startDate}" oninput="updateEducationField(${i}, 'startDate', this.value)" placeholder="e.g. 2018" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">End Date (or Expected)</label>
+                            <input type="text" value="${edu.endDate}" oninput="updateEducationField(${i}, 'endDate', this.value)" placeholder="e.g. 2022" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Skills
+        function addSkillEntry() {
+            resumeData.skills.push({ name: '', proficiency: 'Advanced', category: 'Technical' });
+            renderSkillsForm();
+            updatePreview();
+        }
+        function removeSkillEntry(index) {
+            resumeData.skills.splice(index, 1);
+            renderSkillsForm();
+            updatePreview();
+        }
+        function updateSkillField(index, field, value) {
+            resumeData.skills[index][field] = value;
+            updatePreview();
+        }
+        function renderSkillsForm() {
+            const container = document.getElementById('skillsList');
+            if (resumeData.skills.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No skills added yet. Click "+ Add Skill" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.skills.map((skill, i) => `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center gap-3">
+                    <input type="text" value="${skill.name}" oninput="updateSkillField(${i}, 'name', this.value)" placeholder="e.g. JavaScript, Project Management" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                    <select onchange="updateSkillField(${i}, 'proficiency', this.value)" class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-32">
+                        <option ${skill.proficiency==='Beginner'?'selected':''}>Beginner</option>
+                        <option ${skill.proficiency==='Intermediate'?'selected':''}>Intermediate</option>
+                        <option ${skill.proficiency==='Advanced'?'selected':''}>Advanced</option>
+                        <option ${skill.proficiency==='Expert'?'selected':''}>Expert</option>
+                    </select>
+                    <button type="button" onclick="removeSkillEntry(${i})" class="text-slate-500 hover:text-red-400 text-xs px-2"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // Projects
+        function addProjectEntry() {
+            resumeData.projects.push({ name: '', role: '', technologies: '', url: '', description: '' });
+            renderProjectsForm();
+            updatePreview();
+        }
+        function removeProjectEntry(index) {
+            resumeData.projects.splice(index, 1);
+            renderProjectsForm();
+            updatePreview();
+        }
+        function updateProjectField(index, field, value) {
+            resumeData.projects[index][field] = value;
+            updatePreview();
+        }
+        function renderProjectsForm() {
+            const container = document.getElementById('projectList');
+            if (resumeData.projects.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No projects added yet. Click "+ Add Project" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.projects.map((proj, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative">
+                    <button type="button" onclick="removeProjectEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Project Name</label>
+                            <input type="text" value="${proj.name}" oninput="updateProjectField(${i}, 'name', this.value)" placeholder="e.g. E-Commerce Platform" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Technologies Used</label>
+                            <input type="text" value="${proj.technologies}" oninput="updateProjectField(${i}, 'technologies', this.value)" placeholder="e.g. React, Node.js, PostgreSQL" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Your Role</label>
+                            <input type="text" value="${proj.role}" oninput="updateProjectField(${i}, 'role', this.value)" placeholder="e.g. Lead Developer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Project URL</label>
+                            <input type="text" value="${proj.url}" oninput="updateProjectField(${i}, 'url', this.value)" placeholder="e.g. github.com/user/project" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">Description & Key Features</label>
+                        <textarea rows="2" oninput="updateProjectField(${i}, 'description', this.value)" placeholder="Highlight major features and impact..." class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200">${proj.description}</textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Certifications
+        function addCertificationEntry() {
+            resumeData.certifications.push({ name: '', issuer: '', date: '', url: '' });
+            renderCertificationsForm();
+            updatePreview();
+        }
+        function removeCertificationEntry(index) {
+            resumeData.certifications.splice(index, 1);
+            renderCertificationsForm();
+            updatePreview();
+        }
+        function updateCertificationField(index, field, value) {
+            resumeData.certifications[index][field] = value;
+            updatePreview();
+        }
+        function renderCertificationsForm() {
+            const container = document.getElementById('certificationList');
+            if (resumeData.certifications.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No certifications added yet. Click "+ Add Certification" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.certifications.map((cert, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative">
+                    <button type="button" onclick="removeCertificationEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Certification Name</label>
+                            <input type="text" value="${cert.name}" oninput="updateCertificationField(${i}, 'name', this.value)" placeholder="e.g. AWS Certified Solutions Architect" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Issuing Organization</label>
+                            <input type="text" value="${cert.issuer}" oninput="updateCertificationField(${i}, 'issuer', this.value)" placeholder="e.g. Amazon Web Services" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Date Obtained</label>
+                            <input type="text" value="${cert.date}" oninput="updateCertificationField(${i}, 'date', this.value)" placeholder="e.g. 2023" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Credential URL</label>
+                            <input type="text" value="${cert.url}" oninput="updateCertificationField(${i}, 'url', this.value)" placeholder="e.g. Credly link" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Awards
+        function addAwardEntry() {
+            resumeData.awards.push({ name: '', issuer: '', date: '', description: '' });
+            renderAwardsForm();
+            updatePreview();
+        }
+        function removeAwardEntry(index) {
+            resumeData.awards.splice(index, 1);
+            renderAwardsForm();
+            updatePreview();
+        }
+        function updateAwardField(index, field, value) {
+            resumeData.awards[index][field] = value;
+            updatePreview();
+        }
+        function renderAwardsForm() {
+            const container = document.getElementById('awardList');
+            if (resumeData.awards.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No awards added yet. Click "+ Add Award" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.awards.map((awd, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative">
+                    <button type="button" onclick="removeAwardEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Award Name</label>
+                            <input type="text" value="${awd.name}" oninput="updateAwardField(${i}, 'name', this.value)" placeholder="e.g. Employee of the Year" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Organization</label>
+                            <input type="text" value="${awd.issuer}" oninput="updateAwardField(${i}, 'issuer', this.value)" placeholder="e.g. TechCorp" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Date</label>
+                            <input type="text" value="${awd.date}" oninput="updateAwardField(${i}, 'date', this.value)" placeholder="e.g. 2024" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Languages
+        function addLanguageEntry() {
+            resumeData.languages.push({ name: '', proficiency: 'Fluent' });
+            renderLanguagesForm();
+            updatePreview();
+        }
+        function removeLanguageEntry(index) {
+            resumeData.languages.splice(index, 1);
+            renderLanguagesForm();
+            updatePreview();
+        }
+        function updateLanguageField(index, field, value) {
+            resumeData.languages[index][field] = value;
+            updatePreview();
+        }
+        function renderLanguagesForm() {
+            const container = document.getElementById('languageList');
+            if (resumeData.languages.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No languages added yet. Click "+ Add Language" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.languages.map((lang, i) => `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center gap-3">
+                    <input type="text" value="${lang.name}" oninput="updateLanguageField(${i}, 'name', this.value)" placeholder="e.g. English, Filipino, Japanese" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                    <select onchange="updateLanguageField(${i}, 'proficiency', this.value)" class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-36">
+                        <option ${lang.proficiency==='Native'?'selected':''}>Native</option>
+                        <option ${lang.proficiency==='Fluent'?'selected':''}>Fluent</option>
+                        <option ${lang.proficiency==='Advanced'?'selected':''}>Advanced</option>
+                        <option ${lang.proficiency==='Intermediate'?'selected':''}>Intermediate</option>
+                        <option ${lang.proficiency==='Beginner'?'selected':''}>Beginner</option>
+                    </select>
+                    <button type="button" onclick="removeLanguageEntry(${i})" class="text-slate-500 hover:text-red-400 text-xs px-2"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // Organizations
+        function addOrganizationEntry() {
+            resumeData.organizations.push({ name: '', position: '', startDate: '', endDate: '', description: '' });
+            renderOrganizationsForm();
+            updatePreview();
+        }
+        function removeOrganizationEntry(index) {
+            resumeData.organizations.splice(index, 1);
+            renderOrganizationsForm();
+            updatePreview();
+        }
+        function updateOrganizationField(index, field, value) {
+            resumeData.organizations[index][field] = value;
+            updatePreview();
+        }
+        function renderOrganizationsForm() {
+            const container = document.getElementById('organizationList');
+            if (resumeData.organizations.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No organizations added yet. Click "+ Add Organization" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.organizations.map((org, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative">
+                    <button type="button" onclick="removeOrganizationEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Organization Name</label>
+                            <input type="text" value="${org.name}" oninput="updateOrganizationField(${i}, 'name', this.value)" placeholder="e.g. Developer Society" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Position / Role</label>
+                            <input type="text" value="${org.position}" oninput="updateOrganizationField(${i}, 'position', this.value)" placeholder="e.g. President" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Start Date</label>
+                            <input type="text" value="${org.startDate}" oninput="updateOrganizationField(${i}, 'startDate', this.value)" placeholder="e.g. 2021" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">End Date</label>
+                            <input type="text" value="${org.endDate}" oninput="updateOrganizationField(${i}, 'endDate', this.value)" placeholder="e.g. 2023" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // References
+        function toggleReferencesMode() {
+            const checked = document.getElementById('referencesAvailableToggle').checked;
+            resumeData.references.availableUponRequest = checked;
+            document.getElementById('referencesContentContainer').style.display = checked ? 'none' : 'block';
+            updatePreview();
+        }
+        function addReferenceEntry() {
+            resumeData.references.list.push({ name: '', position: '', company: '', email: '', phone: '' });
+            renderReferencesForm();
+            updatePreview();
+        }
+        function removeReferenceEntry(index) {
+            resumeData.references.list.splice(index, 1);
+            renderReferencesForm();
+            updatePreview();
+        }
+        function updateReferenceField(index, field, value) {
+            resumeData.references.list[index][field] = value;
+            updatePreview();
+        }
+        function renderReferencesForm() {
+            const container = document.getElementById('referenceList');
+            if (resumeData.references.list.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 bg-slate-950 rounded-xl border border-slate-800 text-slate-500 text-xs">No references added. Click "+ Add Reference" above.</div>`;
+                return;
+            }
+            container.innerHTML = resumeData.references.list.map((ref, i) => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative">
+                    <button type="button" onclick="removeReferenceEntry(${i})" class="absolute top-4 right-4 text-slate-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Reference Name</label>
+                            <input type="text" value="${ref.name}" oninput="updateReferenceField(${i}, 'name', this.value)" placeholder="e.g. Dr. Jane Smith" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Position / Title</label>
+                            <input type="text" value="${ref.position}" oninput="updateReferenceField(${i}, 'position', this.value)" placeholder="e.g. Director of Engineering" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Company / Organization</label>
+                            <input type="text" value="${ref.company}" oninput="updateReferenceField(${i}, 'company', this.value)" placeholder="e.g. Tech Solutions Inc." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Email</label>
+                            <input type="email" value="${ref.email}" oninput="updateReferenceField(${i}, 'email', this.value)" placeholder="e.g. jane@techsolutions.com" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Settings & Customization
+        function setAccentColor(colorName, hexCode) {
+            resumeData.settings.accentColor = hexCode;
+            updatePreview();
+            showToast(`Accent color updated to ${colorName}.`);
+        }
+
+        function zoomPreview(delta) {
+            resumeData.settings.zoom = Math.max(0.6, Math.min(1.4, resumeData.settings.zoom + delta));
+            document.getElementById('resumePreview').style.transform = `scale(${resumeData.settings.zoom})`;
+            document.getElementById('resumePreview').style.transformOrigin = 'top center';
+        }
+
+        function toggleSectionModal() {
+            const modal = document.getElementById('sectionModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function renderSectionOrderModal() {
+            const container = document.getElementById('sectionOrderList');
+            container.innerHTML = resumeData.settings.sectionsOrder.map((sec, i) => `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" ${sec.enabled ? 'checked' : ''} onchange="resumeData.settings.sectionsOrder[${i}].enabled = this.checked; updatePreview();" class="rounded bg-slate-900 border-slate-800 text-indigo-600">
+                        <span class="text-xs font-medium text-slate-200">${sec.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="moveSection(${i}, -1)" class="w-6 h-6 bg-slate-900 hover:bg-slate-800 rounded text-slate-400 text-xs flex items-center justify-center"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button onclick="moveSection(${i}, 1)" class="w-6 h-6 bg-slate-900 hover:bg-slate-800 rounded text-slate-400 text-xs flex items-center justify-center"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function moveSection(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= resumeData.settings.sectionsOrder.length) return;
+            const temp = resumeData.settings.sectionsOrder[index];
+            resumeData.settings.sectionsOrder[index] = resumeData.settings.sectionsOrder[newIndex];
+            resumeData.settings.sectionsOrder[newIndex] = temp;
+            renderSectionOrderModal();
+            updatePreview();
+        }
+
+        // Live Preview Rendering Engine
+        function updatePreview() {
+            // Synchronize personal form fields into resumeData
+            resumeData.personal.fullName = document.getElementById('fullName').value;
+            resumeData.personal.professionalTitle = document.getElementById('professionalTitle').value;
+            resumeData.personal.email = document.getElementById('email').value;
+            resumeData.personal.phone = document.getElementById('phone').value;
+            resumeData.personal.address = document.getElementById('address').value;
+            resumeData.personal.city = document.getElementById('city').value;
+            resumeData.personal.province = document.getElementById('province').value;
+            resumeData.personal.country = document.getElementById('country').value;
+            resumeData.personal.linkedin = document.getElementById('linkedin').value;
+            resumeData.personal.github = document.getElementById('github').value;
+            resumeData.personal.website = document.getElementById('website').value;
+            resumeData.summary = document.getElementById('professionalSummary').value;
+            resumeData.settings.template = document.getElementById('templateSelect').value;
+
+            // Validation check
+            const isValid = resumeData.personal.fullName.trim() !== '' && resumeData.personal.email.trim() !== '';
+            document.getElementById('validationWarning').classList.toggle('hidden', isValid);
+
+            const previewEl = document.getElementById('resumePreview');
+            const color = resumeData.settings.accentColor;
+            const template = resumeData.settings.template;
+
+            let html = '';
+
+            // Render Header according to template
+            html += renderHeaderHTML(template, color);
+
+            // Render Sections based on order and enabled status
+            resumeData.settings.sectionsOrder.forEach(sec => {
+                if (!sec.enabled) return;
+                switch(sec.id) {
+                    case 'summary':
+                        if (resumeData.summary.trim()) html += renderSummaryHTML(template, color);
+                        break;
+                    case 'experience':
+                        if (resumeData.experience.length > 0) html += renderExperienceHTML(template, color);
+                        break;
+                    case 'education':
+                        if (resumeData.education.length > 0) html += renderEducationHTML(template, color);
+                        break;
+                    case 'skills':
+                        if (resumeData.skills.length > 0) html += renderSkillsHTML(template, color);
+                        break;
+                    case 'projects':
+                        if (resumeData.projects.length > 0) html += renderProjectsHTML(template, color);
+                        break;
+                    case 'certifications':
+                        if (resumeData.certifications.length > 0) html += renderCertificationsHTML(template, color);
+                        break;
+                    case 'awards':
+                        if (resumeData.awards.length > 0) html += renderAwardsHTML(template, color);
+                        break;
+                    case 'languages':
+                        if (resumeData.languages.length > 0) html += renderLanguagesHTML(template, color);
+                        break;
+                    case 'organizations':
+                        if (resumeData.organizations.length > 0) html += renderOrganizationsHTML(template, color);
+                        break;
+                    case 'references':
+                        if (resumeData.references.availableUponRequest || resumeData.references.list.length > 0) html += renderReferencesHTML(template, color);
+                        break;
+                }
+            });
+
+            previewEl.innerHTML = html;
+        }
+
+        // Template HTML Builders
+        function renderHeaderHTML(template, color) {
+            const p = resumeData.personal;
+            const locationParts = [p.city, p.province, p.country].filter(Boolean).join(', ');
+            
+            if (template === 'minimal') {
+                return `
+                    <div class="border-b-2 border-slate-900 pb-5 mb-5">
+                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">${p.fullName || 'Full Name'}</h1>
+                        <p class="text-sm font-medium text-slate-700 mt-0.5">${p.professionalTitle || 'Professional Title'}</p>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mt-2">
+                            ${p.email ? `<span><i class="fa-solid fa-envelope mr-1"></i>${p.email}</span>` : ''}
+                            ${p.phone ? `<span><i class="fa-solid fa-phone mr-1"></i>${p.phone}</span>` : ''}
+                            ${locationParts ? `<span><i class="fa-solid fa-location-dot mr-1"></i>${locationParts}</span>` : ''}
+                            ${p.linkedin ? `<span><i class="fa-brands fa-linkedin mr-1"></i>${p.linkedin}</span>` : ''}
+                            ${p.github ? `<span><i class="fa-brands fa-github mr-1"></i>${p.github}</span>` : ''}
+                            ${p.website ? `<span><i class="fa-solid fa-globe mr-1"></i>${p.website}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (template === 'modern') {
+                return `
+                    <div class="flex items-center gap-6 border-b pb-6 mb-6" style="border-color: ${color}20">
+                        ${p.photo ? `<img src="${p.photo}" class="w-20 h-20 rounded-xl object-cover shadow-md border-2" style="border-color: ${color}">` : ''}
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold tracking-tight" style="color: ${color}">${p.fullName || 'Full Name'}</h1>
+                            <p class="text-sm font-semibold text-slate-700">${p.professionalTitle || 'Professional Title'}</p>
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mt-2">
+                                ${p.email ? `<span><i class="fa-solid fa-envelope mr-1"></i>${p.email}</span>` : ''}
+                                ${p.phone ? `<span><i class="fa-solid fa-phone mr-1"></i>${p.phone}</span>` : ''}
+                                ${locationParts ? `<span><i class="fa-solid fa-location-dot mr-1"></i>${locationParts}</span>` : ''}
+                                ${p.linkedin ? `<span><i class="fa-brands fa-linkedin mr-1"></i>${p.linkedin}</span>` : ''}
+                                ${p.github ? `<span><i class="fa-brands fa-github mr-1"></i>${p.github}</span>` : ''}
+                                ${p.website ? `<span><i class="fa-solid fa-globe mr-1"></i>${p.website}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (template === 'creative') {
+                return `
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6 flex flex-col sm:flex-row items-center gap-6">
+                        ${p.photo ? `<img src="${p.photo}" class="w-24 h-24 rounded-full object-cover shadow-md border-4 border-white">` : ''}
+                        <div class="flex-1 text-center sm:text-left">
+                            <h1 class="text-2xl font-extrabold" style="color: ${color}">${p.fullName || 'Full Name'}</h1>
+                            <p class="text-sm font-semibold text-slate-600 mt-0.5">${p.professionalTitle || 'Professional Title'}</p>
+                            <div class="flex flex-wrap justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-slate-600 mt-3">
+                                ${p.email ? `<span class="bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm"><i class="fa-solid fa-envelope mr-1" style="color: ${color}"></i>${p.email}</span>` : ''}
+                                ${p.phone ? `<span class="bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm"><i class="fa-solid fa-phone mr-1" style="color: ${color}"></i>${p.phone}</span>` : ''}
+                                ${locationParts ? `<span class="bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm"><i class="fa-solid fa-location-dot mr-1" style="color: ${color}"></i>${locationParts}</span>` : ''}
+                                ${p.linkedin ? `<span class="bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm"><i class="fa-brands fa-linkedin mr-1" style="color: ${color}"></i>${p.linkedin}</span>` : ''}
+                                ${p.github ? `<span class="bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm"><i class="fa-brands fa-github mr-1" style="color: ${color}"></i>${p.github}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (template === 'developer') {
+                return `
+                    <div class="border-b-2 pb-5 mb-5 font-mono" style="border-color: ${color}">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-slate-900">${p.fullName || 'Full Name'}</h1>
+                                <p class="text-sm font-medium mt-0.5" style="color: ${color}">// ${p.professionalTitle || 'Software Developer'}</p>
+                            </div>
+                            ${p.photo ? `<img src="${p.photo}" class="w-16 h-16 rounded object-cover border" style="border-color: ${color}">` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mt-3">
+                            ${p.email ? `<span><i class="fa-solid fa-envelope mr-1"></i>${p.email}</span>` : ''}
+                            ${p.phone ? `<span><i class="fa-solid fa-phone mr-1"></i>${p.phone}</span>` : ''}
+                            ${locationParts ? `<span><i class="fa-solid fa-location-dot mr-1"></i>${locationParts}</span>` : ''}
+                            ${p.github ? `<span><i class="fa-brands fa-github mr-1"></i>${p.github}</span>` : ''}
+                            ${p.linkedin ? `<span><i class="fa-brands fa-linkedin mr-1"></i>${p.linkedin}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Default: Professional
+            return `
+                <div class="text-center border-b pb-6 mb-6" style="border-color: ${color}30">
+                    ${p.photo ? `<img src="${p.photo}" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover shadow-md border-2" style="border-color: ${color}">` : ''}
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">${p.fullName || 'Full Name'}</h1>
+                    <p class="text-sm font-semibold mt-1" style="color: ${color}">${p.professionalTitle || 'Professional Title'}</p>
+                    <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-600 mt-2">
+                        ${p.email ? `<span><i class="fa-solid fa-envelope mr-1"></i>${p.email}</span>` : ''}
+                        ${p.phone ? `<span><i class="fa-solid fa-phone mr-1"></i>${p.phone}</span>` : ''}
+                        ${locationParts ? `<span><i class="fa-solid fa-location-dot mr-1"></i>${locationParts}</span>` : ''}
+                        ${p.linkedin ? `<span><i class="fa-brands fa-linkedin mr-1"></i>${p.linkedin}</span>` : ''}
+                        ${p.github ? `<span><i class="fa-brands fa-github mr-1"></i>${p.github}</span>` : ''}
+                        ${p.website ? `<span><i class="fa-solid fa-globe mr-1"></i>${p.website}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSectionHeading(title, color, template) {
+            if (template === 'minimal') {
+                return `<h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-3 mt-5">${title}</h2>`;
+            }
+            if (template === 'developer') {
+                return `<h2 class="text-xs font-bold uppercase tracking-wider font-mono mb-3 mt-5" style="color: ${color}"># ${title}</h2>`;
+            }
+            return `<h2 class="text-xs font-bold uppercase tracking-wider mb-3 mt-5 pb-1 border-b" style="color: ${color}; border-color: ${color}30">${title}</h2>`;
+        }
+
+        function renderSummaryHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Professional Summary', color, template)}
+                    <p class="text-xs text-slate-700 leading-relaxed">${resumeData.summary}</p>
+                </div>
+            `;
+        }
+
+        function renderExperienceHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Work Experience', color, template)}
+                    <div class="space-y-4">
+                        ${resumeData.experience.map(exp => `
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="text-xs font-bold text-slate-900">${exp.title || 'Job Title'}</h3>
+                                        <p class="text-xs font-medium" style="color: ${color}">${exp.company || 'Company Name'} ${exp.type ? `• ${exp.type}` : ''}</p>
+                                    </div>
+                                    <div class="text-right text-[11px] text-slate-500">
+                                        <p>${exp.startDate} — ${exp.current ? 'Present' : exp.endDate}</p>
+                                        <p>${exp.location}</p>
+                                    </div>
+                                </div>
+                                ${exp.description ? `<p class="text-xs text-slate-700 mt-1.5 leading-relaxed whitespace-pre-line">${exp.description}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderEducationHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Education', color, template)}
+                    <div class="space-y-3">
+                        ${resumeData.education.map(edu => `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xs font-bold text-slate-900">${edu.school || 'School Name'}</h3>
+                                    <p class="text-xs font-medium" style="color: ${color}">${edu.degree || 'Degree'} ${edu.major ? `in ${edu.major}` : ''}</p>
+                                </div>
+                                <div class="text-right text-[11px] text-slate-500">
+                                    <p>${edu.startDate} — ${edu.endDate}</p>
+                                    <p>${edu.location}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSkillsHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Skills', color, template)}
+                    <div class="flex flex-wrap gap-1.5">
+                        ${resumeData.skills.map(skill => `
+                            <span class="text-[11px] font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                                ${skill.name} ${skill.proficiency ? `<span class="text-slate-400 font-normal">(${skill.proficiency})</span>` : ''}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectsHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Projects', color, template)}
+                    <div class="space-y-3">
+                        ${resumeData.projects.map(proj => `
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xs font-bold text-slate-900">${proj.name || 'Project Name'} ${proj.role ? `<span class="font-normal text-slate-600">| ${proj.role}</span>` : ''}</h3>
+                                    ${proj.url ? `<span class="text-[11px] text-indigo-600">${proj.url}</span>` : ''}
+                                </div>
+                                ${proj.technologies ? `<p class="text-[11px] font-medium text-slate-600 mt-0.5">Tech: ${proj.technologies}</p>` : ''}
+                                ${proj.description ? `<p class="text-xs text-slate-700 mt-1 leading-relaxed">${proj.description}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCertificationsHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Certifications', color, template)}
+                    <div class="space-y-2">
+                        ${resumeData.certifications.map(cert => `
+                            <div class="flex justify-between items-start text-xs">
+                                <div>
+                                    <span class="font-bold text-slate-900">${cert.name}</span> — <span class="text-slate-700">${cert.issuer}</span>
+                                </div>
+                                <span class="text-[11px] text-slate-500">${cert.date}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAwardsHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Awards & Honors', color, template)}
+                    <div class="space-y-2">
+                        ${resumeData.awards.map(awd => `
+                            <div class="flex justify-between items-start text-xs">
+                                <div>
+                                    <span class="font-bold text-slate-900">${awd.name}</span> — <span class="text-slate-700">${awd.issuer}</span>
+                                </div>
+                                <span class="text-[11px] text-slate-500">${awd.date}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLanguagesHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Languages', color, template)}
+                    <div class="flex flex-wrap gap-3 text-xs">
+                        ${resumeData.languages.map(lang => `
+                            <div><span class="font-bold text-slate-900">${lang.name}</span>: <span class="text-slate-600">${lang.proficiency}</span></div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderOrganizationsHTML(template, color) {
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('Organizations & Activities', color, template)}
+                    <div class="space-y-2">
+                        ${resumeData.organizations.map(org => `
+                            <div class="flex justify-between items-start text-xs">
+                                <div>
+                                    <span class="font-bold text-slate-900">${org.position}</span> at <span class="text-slate-700">${org.name}</span>
+                                </div>
+                                <span class="text-[11px] text-slate-500">${org.startDate} — ${org.endDate}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderReferencesHTML(template, color) {
+            if (resumeData.references.availableUponRequest) {
+                return `
+                    <div class="mb-5">
+                        ${renderSectionHeading('References', color, template)}
+                        <p class="text-xs text-slate-600 italic">References available upon request.</p>
+                    </div>
+                `;
+            }
+            return `
+                <div class="mb-5">
+                    ${renderSectionHeading('References', color, template)}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        ${resumeData.references.list.map(ref => `
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                <p class="font-bold text-slate-900">${ref.name}</p>
+                                <p class="text-slate-700">${ref.position} at ${ref.company}</p>
+                                <p class="text-slate-500 mt-1">${ref.email}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // AI Assistant Integration using Gemini API
+        async function aiPolishSummary() {
+            const summaryBox = document.getElementById('professionalSummary');
+            const currentText = summaryBox.value.trim();
+            if (!currentText) {
+                showToast("Please write a draft summary first for AI to polish.");
+                return;
+            }
+            showToast("✨ Polishing summary with AI...");
+            try {
+                const systemPrompt = "You are an expert executive resume writer. Refine and polish the user's professional summary to be concise, compelling, impact-driven, and ATS-friendly. Maintain first-person or implied professional tone without inventing any false facts, fake companies, or unmentioned skills.";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=`;
+                const payload = {
+                    contents: [{ parts: [{ text: currentText }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+                const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const polishedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (polishedText) {
+                    summaryBox.value = polishedText.trim();
+                    updatePreview();
+                    showToast("Summary successfully polished!");
+                } else {
+                    showToast("Could not generate polished text. Please try again.");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("AI Request failed. Please check connection.");
+            }
+        }
+
+        async function aiPolishExperience(index) {
+            const exp = resumeData.experience[index];
+            const text = exp.description;
+            if (!text) {
+                showToast("Please enter some description points first.");
+                return;
+            }
+            showToast("✨ Polishing job description with AI...");
+            try {
+                const systemPrompt = "You are an expert resume writer. Refine the given job description into concise, action-oriented bullet points using strong action verbs. Do not invent any false metrics, tools, or employment facts.";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=`;
+                const payload = {
+                    contents: [{ parts: [{ text: text }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+                const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const polished = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (polished) {
+                    resumeData.experience[index].description = polished.trim();
+                    renderExperienceForm();
+                    updatePreview();
+                    showToast("Experience description polished!");
+                } else {
+                    showToast("Could not polish experience.");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("AI Request failed.");
+            }
+        }
+
+        // PDF Generation via html2pdf.js
+        // Payment is completed before this function is allowed to run.
+        function downloadPDF() {
+            openPaymentModal();
+        }
+
+        // Generate the PDF only after the server confirms a successful payment.
+        function generatePaidPDF() {
+            const fullName = document.getElementById('fullName').value.trim() || 'My_Resume';
+            const filename = fullName.replace(/\s+/g, '_') + '_Resume.pdf';
+            const element = document.getElementById('resumePreview');
+
+            const opt = {
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            showToast("Preparing your paid PDF download...");
+
+            html2pdf().from(element).set(opt).save().then(() => {
+                showToast("Resume downloaded successfully!");
+            }).catch(err => {
+                console.error(err);
+                showToast("PDF generation failed. Please try again.");
+            });
+        }
+
+        // Local Storage & State Utilities
+        function saveResumeData() {
+            localStorage.setItem('professional_resume_data', JSON.stringify(resumeData));
+            showToast("Resume saved to browser storage successfully!");
+        }
+
+        function loadSavedResume() {
+            const saved = localStorage.getItem('professional_resume_data');
+            if (saved) {
+                try {
+                    resumeData = JSON.parse(saved);
+                    // Populate form fields
+                    document.getElementById('fullName').value = resumeData.personal.fullName || '';
+                    document.getElementById('professionalTitle').value = resumeData.personal.professionalTitle || '';
+                    document.getElementById('email').value = resumeData.personal.email || '';
+                    document.getElementById('phone').value = resumeData.personal.phone || '';
+                    document.getElementById('address').value = resumeData.personal.address || '';
+                    document.getElementById('city').value = resumeData.personal.city || '';
+                    document.getElementById('province').value = resumeData.personal.province || '';
+                    document.getElementById('country').value = resumeData.personal.country || '';
+                    document.getElementById('linkedin').value = resumeData.personal.linkedin || '';
+                    document.getElementById('github').value = resumeData.personal.github || '';
+                    document.getElementById('website').value = resumeData.personal.website || '';
+                    document.getElementById('professionalSummary').value = resumeData.summary || '';
+                    if (resumeData.personal.photo) {
+                        document.getElementById('photoImg').src = resumeData.personal.photo;
+                        document.getElementById('photoImg').classList.remove('hidden');
+                        document.getElementById('photoPlaceholderIcon').classList.add('hidden');
+                        document.getElementById('removePhotoBtn').classList.remove('hidden');
+                    }
+                    if (resumeData.settings.template) {
+                        document.getElementById('templateSelect').value = resumeData.settings.template;
+                    }
+                    if (resumeData.references.availableUponRequest) {
+                        document.getElementById('referencesAvailableToggle').checked = true;
+                        document.getElementById('referencesContentContainer').style.display = 'none';
+                    }
+                    renderAllFormSections();
+                    renderSectionOrderModal();
+                } catch(e) {
+                    console.error("Error loading saved data", e);
+                }
+            }
+        }
+
+        function clearForm() {
+            if (confirm("Are you sure you want to clear all resume information?")) {
+                localStorage.removeItem('professional_resume_data');
+                location.reload();
+            }
+        }
+
+        function loadSampleData() {
+            resumeData = {
+                personal: {
+                    fullName: 'Maria Santos',
+                    professionalTitle: 'Senior Full Stack Software Engineer',
+                    email: 'maria.santos@example.com',
+                    phone: '+63 917 555 0192',
+                    address: '45 Ayala Avenue',
+                    city: 'Makati City',
+                    province: 'Metro Manila',
+                    country: 'Philippines',
+                    linkedin: 'linkedin.com/in/mariasantos-dev',
+                    github: 'github.com/mariasantos',
+                    website: 'mariasantos.dev',
+                    photo: ''
+                },
+                summary: 'Results-driven Senior Full Stack Engineer with over 6 years of expertise architecting scalable web applications, microservices, and cloud solutions. Proven track record of leading cross-functional engineering teams and optimizing system latency by 45%. Passionate about clean code, modern JavaScript frameworks, and robust software architecture.',
+                experience: [
+                    {
+                        title: 'Senior Software Engineer',
+                        company: 'CloudScale Technologies',
+                        type: 'Full-time',
+                        location: 'Taguig City, PH',
+                        startDate: 'Jan 2022',
+                        endDate: 'Present',
+                        current: true,
+                        description: '• Architected core microservices using Node.js and TypeScript, handling over 2M daily active requests.\n• Spearheaded migration from monolithic legacy codebase to AWS serverless infrastructure, reducing monthly cloud hosting costs by 30%.\n• Mentored 6 junior and mid-level developers through code reviews and technical workshops.'
+                    },
+                    {
+                        title: 'Full Stack Web Developer',
+                        company: 'Innovate Solutions Manila',
+                        type: 'Full-time',
+                        location: 'Makati City, PH',
+                        startDate: 'Jun 2019',
+                        endDate: 'Dec 2021',
+                        current: false,
+                        description: '• Developed responsive React.js and Vue.js front-end applications integrated with RESTful and GraphQL APIs.\n• Optimized database queries in PostgreSQL, improving dashboard loading performance by 40%.'
+                    }
+                ],
+                education: [
+                    {
+                        school: 'University of the Philippines Diliman',
+                        degree: 'Bachelor of Science',
+                        major: 'Computer Science',
+                        location: 'Quezon City, PH',
+                        startDate: '2015',
+                        endDate: '2019'
+                    }
+                ],
+                skills: [
+                    { name: 'JavaScript / TypeScript', proficiency: 'Expert', category: 'Programming' },
+                    { name: 'React.js & Next.js', proficiency: 'Expert', category: 'Frontend' },
+                    { name: 'Node.js & Express', proficiency: 'Advanced', category: 'Backend' },
+                    { name: 'PostgreSQL & MongoDB', proficiency: 'Advanced', category: 'Database' },
+                    { name: 'AWS & Docker', proficiency: 'Advanced', category: 'Cloud & DevOps' },
+                    { name: 'Agile / Scrum', proficiency: 'Expert', category: 'Methodology' }
+                ],
+                projects: [
+                    {
+                        name: 'FinPulse Analytics Dashboard',
+                        role: 'Lead Architect',
+                        technologies: 'React, TypeScript, Tailwind CSS, Python',
+                        url: 'github.com/mariasantos/finpulse',
+                        description: 'Real-time financial analytics platform providing actionable insights and automated portfolio risk assessment.'
+                    }
+                ],
+                certifications: [
+                    { name: 'AWS Certified Solutions Architect – Associate', issuer: 'Amazon Web Services', date: '2023', url: '' },
+                    { name: 'Professional Scrum Master I (PSM I)', issuer: 'Scrum.org', date: '2022', url: '' }
+                ],
+                awards: [
+                    { name: 'Best Innovation Award', issuer: 'CloudScale Annual Tech Summit', date: '2023', description: '' }
+                ],
+                languages: [
+                    { name: 'English', proficiency: 'Native / Bilingual' },
+                    { name: 'Filipino', proficiency: 'Native' },
+                    { name: 'Japanese', proficiency: 'Beginner (N4)' }
+                ],
+                organizations: [
+                    { name: 'Philippine Software Industry Association', position: 'Active Member', startDate: '2020', endDate: 'Present', description: '' }
+                ],
+                references: {
+                    availableUponRequest: true,
+                    list: []
+                },
+                settings: {
+                    template: 'professional',
+                    accentColor: '#2563eb',
+                    zoom: 1,
+                    sectionsOrder: [
+                        { id: 'summary', name: 'Professional Summary', enabled: true },
+                        { id: 'experience', name: 'Work Experience', enabled: true },
+                        { id: 'education', name: 'Education', enabled: true },
+                        { id: 'skills', name: 'Skills', enabled: true },
+                        { id: 'projects', name: 'Projects', enabled: true },
+                        { id: 'certifications', name: 'Certifications', enabled: true },
+                        { id: 'awards', name: 'Awards & Achievements', enabled: true },
+                        { id: 'languages', name: 'Languages', enabled: true },
+                        { id: 'organizations', name: 'Organizations / Activities', enabled: true },
+                        { id: 'references', name: 'References', enabled: true }
+                    ]
+                }
+            };
+
+            // Populate form fields
+            document.getElementById('fullName').value = resumeData.personal.fullName;
+            document.getElementById('professionalTitle').value = resumeData.personal.professionalTitle;
+            document.getElementById('email').value = resumeData.personal.email;
+            document.getElementById('phone').value = resumeData.personal.phone;
+            document.getElementById('address').value = resumeData.personal.address;
+            document.getElementById('city').value = resumeData.personal.city;
+            document.getElementById('province').value = resumeData.personal.province;
+            document.getElementById('country').value = resumeData.personal.country;
+            document.getElementById('linkedin').value = resumeData.personal.linkedin;
+            document.getElementById('github').value = resumeData.personal.github;
+            document.getElementById('website').value = resumeData.personal.website;
+            document.getElementById('professionalSummary').value = resumeData.summary;
+            document.getElementById('templateSelect').value = resumeData.settings.template;
+            document.getElementById('referencesAvailableToggle').checked = true;
+            document.getElementById('referencesContentContainer').style.display = 'none';
+
+            renderAllFormSections();
+            renderSectionOrderModal();
+            updatePreview();
+            showToast("Sample data loaded successfully!");
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+
+
+    <!-- =========================================================
+         PAYPAL PAYMENT MODAL
+         Requires the Node/Express backend endpoints described
+         in the setup instructions:
+         /api/paypal/config
+         /api/paypal/create-order
+         /api/paypal/capture-order
+    ========================================================== -->
+    <div id="paymentModal"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+            <div class="bg-slate-950 px-6 py-5 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold">Download Your Resume</h2>
+                        <p class="text-xs text-slate-400 mt-1">Complete payment to unlock your PDF download.</p>
+                    </div>
+                    <button type="button" onclick="closePaymentModal()"
+                            class="text-slate-400 hover:text-white text-xl"
+                            aria-label="Close payment window">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-5">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-xs text-slate-500">Resume PDF</p>
+                            <p class="font-semibold text-slate-900">Professional PDF Download</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p id="paymentPrice" class="text-xl font-bold text-slate-900">$1.00</p>
+                            <p id="paymentCurrency" class="text-[10px] text-slate-500">USD</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs font-semibold text-slate-600 mb-2">Pay securely with PayPal</p>
+                <div id="paypal-button-container"></div>
+
+                <div id="paymentStatus" class="hidden mt-4 text-center text-xs rounded-lg p-3"></div>
+
+                <p class="text-[10px] text-slate-400 text-center mt-5">
+                    Your payment is processed securely by PayPal.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let paypalLoaded = false;
+        let paypalButtonsRendered = false;
+
+        async function openPaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setPaymentStatus('Loading secure payment system...', 'loading');
+
+            try {
+                await loadPayPalSDK();
+                renderPayPalButtons();
+                setPaymentStatus('', '');
+            } catch (error) {
+                console.error('PayPal loading error:', error);
+                setPaymentStatus('Unable to load PayPal. Make sure your backend is running.', 'error');
+            }
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function loadPayPalSDK() {
+            if (paypalLoaded) return;
+
+            const response = await fetch('/api/paypal/config');
+            const config = await response.json();
+
+            if (!response.ok || !config.clientId) {
+                throw new Error(config.error || 'PayPal Client ID is missing.');
+            }
+
+            document.getElementById('paymentPrice').textContent =
+                config.currency === 'USD' ? '$1.00' : 'Payment';
+            document.getElementById('paymentCurrency').textContent = config.currency || 'USD';
+
+            await new Promise((resolve, reject) => {
+                const existing = document.querySelector('script[data-paypal-sdk="true"]');
+                if (existing) {
+                    existing.addEventListener('load', resolve, { once: true });
+                    existing.addEventListener('error', reject, { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src =
+                    'https://www.paypal.com/sdk/js' +
+                    '?client-id=' + encodeURIComponent(config.clientId) +
+                    '&currency=' + encodeURIComponent(config.currency || 'USD') +
+                    '&intent=capture';
+                script.dataset.paypalSdk = 'true';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+
+            paypalLoaded = true;
+        }
+
+        function renderPayPalButtons() {
+            if (paypalButtonsRendered) return;
+            if (!window.paypal) throw new Error('PayPal SDK was not loaded.');
+
+            const container = document.getElementById('paypal-button-container');
+            container.innerHTML = '';
+
+            window.paypal.Buttons({
+                style: {
+                    layout: 'vertical',
+                    shape: 'rect',
+                    label: 'paypal'
+                },
+
+                createOrder: async function () {
+                    setPaymentStatus('Creating secure payment...', 'loading');
+
+                    const response = await fetch('/api/paypal/create-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.id) {
+                        throw new Error(data.error || 'Unable to create payment.');
+                    }
+
+                    return data.id;
+                },
+
+                onApprove: async function (data) {
+                    setPaymentStatus('Payment approved. Verifying payment...', 'loading');
+
+                    try {
+                        const response = await fetch('/api/paypal/capture-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderID: data.orderID })
+                        });
+
+                        const result = await response.json();
+
+                        if (!response.ok || !result.success) {
+                            throw new Error(result.error || 'Payment verification failed.');
+                        }
+
+                        setPaymentStatus('Payment successful! Preparing your PDF...', 'success');
+
+                        setTimeout(() => {
+                            closePaymentModal();
+                            generatePaidPDF();
+                        }, 700);
+                    } catch (error) {
+                        console.error('Payment verification error:', error);
+                        setPaymentStatus(error.message || 'Payment verification failed.', 'error');
+                    }
+                },
+
+                onCancel: function () {
+                    setPaymentStatus('Payment cancelled.', 'error');
+                },
+
+                onError: function (error) {
+                    console.error('PayPal error:', error);
+                    setPaymentStatus('PayPal encountered an error. Please try again.', 'error');
+                }
+            }).render('#paypal-button-container');
+
+            paypalButtonsRendered = true;
+        }
+
+        function setPaymentStatus(message, type) {
+            const status = document.getElementById('paymentStatus');
+
+            if (!message) {
+                status.classList.add('hidden');
+                status.textContent = '';
+                return;
+            }
+
+            status.classList.remove('hidden');
+            status.textContent = message;
+            status.className = 'mt-4 text-center text-xs rounded-lg p-3';
+
+            if (type === 'success') {
+                status.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
+            } else if (type === 'error') {
+                status.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+            } else {
+                status.classList.add('bg-slate-50', 'text-slate-600', 'border', 'border-slate-200');
+            }
+        }
+    </script>
+
+</body>
+</html>
