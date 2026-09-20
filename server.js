@@ -32,9 +32,7 @@ const PDF_CURRENCY = "USD";
 // --------------------------------------------------
 
 app.get("/", (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "public", "index.html")
-    );
+    res.redirect("/index.html");
 });
 
 
